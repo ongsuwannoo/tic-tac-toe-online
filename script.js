@@ -1,12 +1,8 @@
 const statusDisplay = document.querySelector('.game--status');
-const roomId = '123'
 
-let gameActive = true;
-let currentPlayer = "X";
-let gameState = ["", "", "", "", "", "", "", "", ""];
+let gameActive, currentPlayer, gameState, currentGameState;
 
-let gameActive_ = false;
-let currentPlayer_ = "X"
+let roomId = "123"
 let number = 0
 
 const winningMessage = () => `Player ${currentPlayer} has won!`;
@@ -26,19 +22,17 @@ const winningConditions = [
     [2, 4, 6]
 ];
 
-function handleCellPlayed(clickedCell, clickedCellIndex) {
-    gameState[clickedCellIndex] = currentPlayer;
-    clickedCell.innerHTML = currentPlayer;
+function handleCellPlayed(player, clickedCell, clickedCellIndex) {
+    gameState[clickedCellIndex] = player;
+    clickedCell.innerHTML = player;
 }
 
-async function handlePlayerChange() {
+function handlePlayerChange() {
     currentPlayer = currentPlayer === "X" ? "O" : "X";
-
-    await firebase.database().ref(`room/${roomId}/currentPlayer`).set(currentPlayer_ === "X" ? "O" : "X")
     statusDisplay.innerHTML = currentPlayerTurn();
 }
 
-function handleResultValidation() {
+async function handleResultValidation(updateAble) {
     let roundWon = false;
     for (let i = 0; i <= 7; i++) {
         const winCondition = winningConditions[i];
@@ -56,21 +50,22 @@ function handleResultValidation() {
 
     if (roundWon) {
         statusDisplay.innerHTML = winningMessage();
-        gameActive = false;
         return;
     }
 
     let roundDraw = !gameState.includes("");
     if (roundDraw) {
         statusDisplay.innerHTML = drawMessage();
-        gameActive = false;
         return;
     }
 
-    handlePlayerChange();
+    if (!updateAble) {
+        handlePlayerChange();
+        await update()
+    }
 }
 
-function handleCellClick(clickedCellEvent) {
+async function handleCellClick(clickedCellEvent) {
     const clickedCell = clickedCellEvent.target;
     const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
 
@@ -78,37 +73,74 @@ function handleCellClick(clickedCellEvent) {
         return;
     }
 
-    handleCellPlayed(clickedCell, clickedCellIndex);
-    handleResultValidation();
+    handleCellPlayed(currentPlayer, clickedCell, clickedCellIndex);
+    handleResultValidation(false);
 }
 
-function handleRestartGame() {
+function handleCellChange(player, clickedCellIndex) {
+
+    const clickedCell = document.querySelectorAll(`[data-cell-index="${clickedCellIndex}"]`)[0];
+
+    handleCellPlayed(player, clickedCell, clickedCellIndex);
+    handleResultValidation(true);
+
+    statusDisplay.innerHTML = currentPlayerTurn();
+}
+
+async function handleRestartGame() {
+    gameActive = true;
+    currentPlayer = "X";
+    gameState = ["", "", "", "", "", "", "", "", ""];
+
+    statusDisplay.innerHTML = currentPlayerTurn();
+    document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = "");
+
+    await update()
+}
+
+async function handleCreateNewRoom() {
+    roomId = makeid(5)
     gameActive = true;
     currentPlayer = "X";
     gameState = ["", "", "", "", "", "", "", "", ""];
     statusDisplay.innerHTML = currentPlayerTurn();
     document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = "");
-}
 
+    await update()
+}
 
 document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
 document.querySelector('.game--restart').addEventListener('click', handleRestartGame);
+// document.querySelector('.game--newRoom').addEventListener('click', handleCreateNewRoom);
 
-const ref = firebase.database().ref('name')
 const room = firebase.database().ref(`room/${roomId}`)
 
-ref.on('value', function (snapshot) {
-    number = snapshot.val()
-    document.getElementById('number').innerHTML = number
-});
-
 room.on('value', function (snapshot) {
-    gameActive_ = snapshot.val().gameActive
-    currentPlayer_ = snapshot.val().currentPlayer
-    console.log(gameActive_, currentPlayer_);
+    gameActive = snapshot.val().gameActive
+    currentPlayer = snapshot.val().currentPlayer
+    gameState = snapshot.val().gameState
+    
+    console.log(gameActive, currentPlayer, gameState);
+    for (let i = 0; i < gameState.length; i++) {
+        handleCellChange(gameState[i], i)
+    }
 });
 
-async function count() {
+async function update() {
+    await firebase.database().ref(`room/${roomId}`).set({
+        gameActive: gameActive,
+        currentPlayer: currentPlayer,
+        gameState: gameState
+    })
+}
 
-    await firebase.database().ref('name').set(number + 1)
+function makeid(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() *
+            charactersLength));
+    }
+    return result;
 }
