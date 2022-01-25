@@ -1,0 +1,44 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.4/firebase-app-compat.min.js"
+        integrity="sha512-0HMZTq1uR6MGErmw7/Y5p68bghNopFcCA8dPOffuMU2neqUCiSLcPxhkhfErbjuCVpFG+z1gnWPHOHH8Xck6WQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.4/firebase-database-compat.min.js"
+        integrity="sha512-VzajLGxDf6DU/BhHTnFf0pZ5Kq1+7xWuR68zE8t4enpiiwfW7tujLwOF0+JeTnxFnh9iqBj5UkrFezeh/Q1RPA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1 id="number"></h1>
+    <button onclick="count()">
+        Click
+    </button>
+    <section>
+        <h1 class="game--title">Tic Tac Toe</h1>
+        <div class="game--container">
+            <div data-cell-index="0" class="cell"></div>
+            <div data-cell-index="1" class="cell"></div>
+            <div data-cell-index="2" class="cell"></div>
+            <div data-cell-index="3" class="cell"></div>
+            <div data-cell-index="4" class="cell"></div>
+            <div data-cell-index="5" class="cell"></div>
+            <div data-cell-index="6" class="cell"></div>
+            <div data-cell-index="7" class="cell"></div>
+            <div data-cell-index="8" class="cell"></div>
+        </div>
+        <h2 class="game--status"></h2>
+        <button class="game--restart">Restart Game</button>
+    </section>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
