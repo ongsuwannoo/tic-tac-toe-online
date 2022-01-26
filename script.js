@@ -81,7 +81,7 @@ async function handleResultValidation(updateAble) {
 async function handleCellClick(clickedCellEvent) {
     const clickedCell = clickedCellEvent.target;
     const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
-    
+
     if ((gameState[clickedCellIndex] !== "") || (currentPlayer != selectPlayer) || !gameActive) {
         return;
     }
@@ -146,11 +146,13 @@ function handleJoin() {
 /*===================================================
                     EventListener
 =====================================================*/
-document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
-document.querySelector('.game--restart').addEventListener('click', handleRestartGame);
-document.querySelector('.game--join').addEventListener('click', handleJoin);
-document.querySelectorAll('select[name="player"] option').forEach(cell => cell.addEventListener('click', handleSelectPlayer));
-document.querySelector('.game--newRoom').addEventListener('click', handleCreateNewRoom);
+function load() {
+    document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
+    document.querySelector('.game--restart').addEventListener('click', handleRestartGame);
+    document.querySelector('.game--join').addEventListener('click', handleJoin);
+    document.querySelectorAll('select[name="player"]').forEach(cell => cell.addEventListener('change', handleSelectPlayer));
+    document.querySelector('.game--newRoom').addEventListener('click', handleCreateNewRoom);
+}
 
 /*===================================================
                      Function
@@ -192,3 +194,5 @@ function makeid(length) {
     }
     return result;
 }
+
+document.addEventListener("DOMContentLoaded", load, false);
