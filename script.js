@@ -1,8 +1,10 @@
 const statusDisplay = document.querySelector('.game--status');
+const roomIdDisplay = document.querySelector('.game--roomId');
+const roomInput = document.querySelector('input[name="roomInput"]')
 
 let gameActive, currentPlayer, gameState, currentGameState, selectPlayer;
 
-let roomId = "123"
+let roomId;
 let number = 0
 
 const winningMessage = () => `Player ${currentPlayer} has won!`;
@@ -22,6 +24,9 @@ const winningConditions = [
     [2, 4, 6]
 ];
 
+/*===================================================
+                    Handler
+=====================================================*/
 function handleCellPlayed(player, clickedCell, clickedCellIndex) {
     gameState[clickedCellIndex] = player;
     clickedCell.innerHTML = player;
@@ -48,7 +53,6 @@ async function handleResultValidation(updateAble) {
             break
         }
     }
-    console.log(roundWon, roundDraw);
 
     if (!updateAble) {
         if (!roundWon && !roundDraw) {
@@ -60,12 +64,14 @@ async function handleResultValidation(updateAble) {
     if (roundWon) {
         console.log('roundWon');
         statusDisplay.innerHTML = winningMessage();
+        gameActive = false
         return 'win';
     }
 
     if (roundDraw) {
         console.log('roundDraw');
         statusDisplay.innerHTML = drawMessage();
+        gameActive = false
         return 'draw';
     }
 
@@ -75,13 +81,14 @@ async function handleResultValidation(updateAble) {
 async function handleCellClick(clickedCellEvent) {
     const clickedCell = clickedCellEvent.target;
     const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
-
-    if (gameState[clickedCellIndex] !== "" || !gameActive || currentPlayer != selectPlayer) {
+    
+    if ((gameState[clickedCellIndex] !== "") || (currentPlayer != selectPlayer) || !gameActive) {
         return;
     }
 
     handleCellPlayed(currentPlayer, clickedCell, clickedCellIndex);
     handleResultValidation(false);
+    console.log(gameState[clickedCellIndex] !== "", !gameActive, (currentPlayer != selectPlayer));
 }
 
 async function handleCellChange(player, clickedCellIndex) {
@@ -115,11 +122,15 @@ async function handleCreateNewRoom() {
     document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = "");
 
     await update()
+    subscribe()
+    roomInput.value = roomId
+    console.log(roomId);
 }
 
 function handleSelectPlayer(selectEvent) {
     selectPlayer = selectEvent.target.value
     const section = document.querySelector("section");
+
     if (selectPlayer == "X" || selectPlayer == "O") {
         section.style.display = "inline";
     } else {
@@ -127,23 +138,41 @@ function handleSelectPlayer(selectEvent) {
     }
 }
 
+function handleJoin() {
+    roomId = roomInput.value
+    subscribe()
+}
+
+/*===================================================
+                    EventListener
+=====================================================*/
 document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
 document.querySelector('.game--restart').addEventListener('click', handleRestartGame);
+document.querySelector('.game--join').addEventListener('click', handleJoin);
 document.querySelectorAll('select[name="player"] option').forEach(cell => cell.addEventListener('click', handleSelectPlayer));
-// document.querySelector('.game--newRoom').addEventListener('click', handleCreateNewRoom);
+document.querySelector('.game--newRoom').addEventListener('click', handleCreateNewRoom);
 
-const room = firebase.database().ref(`room/${roomId}`)
+/*===================================================
+                     Function
+=====================================================*/
+function subscribe() {
+    const room = firebase.database().ref(`room/${roomId}`)
+    room.on('value', function (snapshot) {
+        const data = snapshot.val()
+        if (data) {
+            gameActive = data.gameActive
+            currentPlayer = data.currentPlayer
+            gameState = data.gameState
 
-room.on('value', function (snapshot) {
-    gameActive = snapshot.val().gameActive
-    currentPlayer = snapshot.val().currentPlayer
-    gameState = snapshot.val().gameState
+            // console.log(gameActive, currentPlayer, gameState);
+            for (let i = 0; i < gameState.length; i++) {
+                handleCellChange(gameState[i], i)
+            }
 
-    console.log(gameActive, currentPlayer, gameState);
-    for (let i = 0; i < gameState.length; i++) {
-        handleCellChange(gameState[i], i)
-    }
-});
+            roomIdDisplay.innerHTML = roomId
+        }
+    });
+}
 
 async function update() {
     firebase.database().ref(`room/${roomId}`).set({
