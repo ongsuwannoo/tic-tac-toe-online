@@ -143,6 +143,15 @@ function handleJoin() {
     subscribe()
 }
 
+function handleCopy() {
+    const copyText = roomInput
+
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); /* For mobile devices */
+
+    navigator.clipboard.writeText(copyText.value);
+}
+
 /*===================================================
                     EventListener
 =====================================================*/
@@ -150,6 +159,7 @@ function load() {
     document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
     document.querySelector('.game--restart').addEventListener('click', handleRestartGame);
     document.querySelector('.game--join').addEventListener('click', handleJoin);
+    document.querySelector('.game--copy').addEventListener('click', handleCopy);
     document.querySelectorAll('select[name="player"]').forEach(cell => cell.addEventListener('change', handleSelectPlayer));
     document.querySelector('.game--newRoom').addEventListener('click', handleCreateNewRoom);
 }
