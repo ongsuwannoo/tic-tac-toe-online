@@ -1,6 +1,6 @@
 const statusDisplay = document.querySelector('.game--status');
 
-let gameActive, currentPlayer, gameState, currentGameState;
+let gameActive, currentPlayer, gameState, currentGameState, selectPlayer;
 
 let roomId = "123"
 let number = 0
@@ -34,6 +34,7 @@ function handlePlayerChange() {
 
 async function handleResultValidation(updateAble) {
     let roundWon = false;
+    let roundDraw = !gameState.includes("");
     for (let i = 0; i <= 7; i++) {
         const winCondition = winningConditions[i];
         let a = gameState[winCondition[0]];
@@ -47,29 +48,35 @@ async function handleResultValidation(updateAble) {
             break
         }
     }
-
-    if (roundWon) {
-        statusDisplay.innerHTML = winningMessage();
-        return;
-    }
-
-    let roundDraw = !gameState.includes("");
-    if (roundDraw) {
-        statusDisplay.innerHTML = drawMessage();
-        return;
-    }
+    console.log(roundWon, roundDraw);
 
     if (!updateAble) {
-        handlePlayerChange();
+        if (!roundWon && !roundDraw) {
+            handlePlayerChange();
+        }
         await update()
     }
+
+    if (roundWon) {
+        console.log('roundWon');
+        statusDisplay.innerHTML = winningMessage();
+        return 'win';
+    }
+
+    if (roundDraw) {
+        console.log('roundDraw');
+        statusDisplay.innerHTML = drawMessage();
+        return 'draw';
+    }
+
+    return;
 }
 
 async function handleCellClick(clickedCellEvent) {
     const clickedCell = clickedCellEvent.target;
     const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
 
-    if (gameState[clickedCellIndex] !== "" || !gameActive) {
+    if (gameState[clickedCellIndex] !== "" || !gameActive || currentPlayer != selectPlayer) {
         return;
     }
 
@@ -77,14 +84,15 @@ async function handleCellClick(clickedCellEvent) {
     handleResultValidation(false);
 }
 
-function handleCellChange(player, clickedCellIndex) {
+async function handleCellChange(player, clickedCellIndex) {
 
     const clickedCell = document.querySelectorAll(`[data-cell-index="${clickedCellIndex}"]`)[0];
 
     handleCellPlayed(player, clickedCell, clickedCellIndex);
-    handleResultValidation(true);
-
-    statusDisplay.innerHTML = currentPlayerTurn();
+    const status = await handleResultValidation(true);
+    if (!status) {
+        statusDisplay.innerHTML = currentPlayerTurn();
+    }
 }
 
 async function handleRestartGame() {
@@ -109,8 +117,19 @@ async function handleCreateNewRoom() {
     await update()
 }
 
+function handleSelectPlayer(selectEvent) {
+    selectPlayer = selectEvent.target.value
+    const section = document.querySelector("section");
+    if (selectPlayer == "X" || selectPlayer == "O") {
+        section.style.display = "inline";
+    } else {
+        section.style.display = "none";
+    }
+}
+
 document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
 document.querySelector('.game--restart').addEventListener('click', handleRestartGame);
+document.querySelectorAll('select[name="player"] option').forEach(cell => cell.addEventListener('click', handleSelectPlayer));
 // document.querySelector('.game--newRoom').addEventListener('click', handleCreateNewRoom);
 
 const room = firebase.database().ref(`room/${roomId}`)
@@ -119,7 +138,7 @@ room.on('value', function (snapshot) {
     gameActive = snapshot.val().gameActive
     currentPlayer = snapshot.val().currentPlayer
     gameState = snapshot.val().gameState
-    
+
     console.log(gameActive, currentPlayer, gameState);
     for (let i = 0; i < gameState.length; i++) {
         handleCellChange(gameState[i], i)
@@ -127,7 +146,7 @@ room.on('value', function (snapshot) {
 });
 
 async function update() {
-    await firebase.database().ref(`room/${roomId}`).set({
+    firebase.database().ref(`room/${roomId}`).set({
         gameActive: gameActive,
         currentPlayer: currentPlayer,
         gameState: gameState

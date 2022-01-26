@@ -17,8 +17,14 @@
 </head>
 
 <body>
+    <h1 class="game--title">Tic Tac Toe</h1>
+    <label class="game--text">Select player</label>
+    <select class="button" name="player">
+        <option value="">-- select --</option>
+        <option value="X">X</option>
+        <option value="O">O</option>
+    </select>
     <section>
-        <h1 class="game--title">Tic Tac Toe</h1>
         <div class="game--container">
             <div data-cell-index="0" class="cell"></div>
             <div data-cell-index="1" class="cell"></div>
@@ -30,8 +36,10 @@
             <div data-cell-index="7" class="cell"></div>
             <div data-cell-index="8" class="cell"></div>
         </div>
+        <!-- <button class="button">X</button>
+        <button class="button">Y</button> -->
         <h2 class="game--status"></h2>
-        <button class="game--restart">Restart Game</button>
+        <button class="button game--restart">Restart Game</button>
         <!-- <button class="game--newRoom">Create New Room</button> -->
     </section>
     <script src="config.js"></script>
